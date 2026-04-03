@@ -136,7 +136,7 @@ function findJsonlFiles(dir) {
 
       if (entry.isDirectory()) {
         files.push(...findJsonlFiles(fullPath));
-      } else if (entry.name.endsWith('.jsonl') || entry.name.includes('.jsonl.')) {
+      } else if (entry.name.endsWith('.jsonl') && !entry.name.includes('.deleted.')) {
         files.push(fullPath);
       }
     }
@@ -236,7 +236,10 @@ async function parseJsonlFile(filePath) {
       }
     }
   } catch (error) {
-    console.error('Error parsing JSONL file:', filePath, error.message);
+    // Silently skip files that vanish between readdir and read (ENOENT race condition)
+    if (error.code !== 'ENOENT') {
+      console.error('Error parsing JSONL file:', filePath, error.message);
+    }
   }
 
   return results;
